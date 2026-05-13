@@ -1,0 +1,160 @@
+# Benchmark SpinCare aplicado ao Dignidade 360
+
+## Fontes públicas consultadas
+
+- Site institucional SpinCare: https://spincare.com.br/
+- Página de aplicativo mobile SpinCare: https://spincare.com.br/aplicativo-mobile/
+- SpinCare App no Google Play: https://play.google.com/store/apps/details?id=com.spintec.spincare_app&hl=pt
+- SpinCare App na App Store: https://apps.apple.com/br/app/spincare-app/id1579096479
+
+## Síntese da análise
+
+A SpinCare se posiciona como software de gestão para Home Care, desospitalização e transição de cuidados. A proposta pública combina operação assistencial, aplicativo multiprofissional, aplicativo para família, escalas, plano de cuidado, prontuário, faturamento, estoque/farmácia, financeiro, indicadores e segurança de dados.
+
+O ponto mais forte do benchmark não é apenas prontuário. É a integração entre assistência e operação: quem atende, quando atende, se chegou ao local, o que executou, quais itens do plano foram checados, quais intercorrências ocorreram, como a família acompanha, quais suprimentos foram usados e como isso conversa com orçamento/faturamento.
+
+## Funcionalidades identificadas
+
+### Operação assistencial
+
+- Escalas integradas de pacientes e profissionais.
+- Controle de rotina da equipe.
+- Trocas de escala.
+- Check-in e check-out com geolocalização.
+- Acompanhamento em tempo real do atendimento.
+- Funcionamento mobile para profissionais.
+- Registro online e offline no aplicativo.
+
+### Plano de cuidado
+
+- Checklist de ações programadas.
+- Horários para execução.
+- Notificações de alerta.
+- Execução, prorrogação ou cancelamento de itens.
+- Justificativas e anexos/imagens.
+- Registro automático no prontuário.
+
+### Prontuário
+
+- Prontuário eletrônico multiprofissional.
+- Prescrição eletrônica.
+- Evoluções livres e estruturadas.
+- Ocorrências e intercorrências.
+- Imagens em eventos críticos.
+
+### Família
+
+- Aplicativo para família acompanhar rotina em tempo real.
+- Fotos e anotações dos cuidadores.
+- Consulta a escalas.
+- Acompanhamento do plano de cuidado.
+- Avaliação de profissionais.
+- Registro de ocorrências e intercorrências.
+
+### Gestão
+
+- Indicadores e alertas.
+- Indicadores financeiros e orçamentários.
+- Visão gerencial de escalas.
+- Modalidades dos pacientes.
+- Redução de planilhas.
+- Captação mais rápida.
+
+### Financeiro e suprimentos
+
+- Orçamentos online.
+- Módulo de faturamento.
+- Regras para diferentes contratos.
+- Redução de glosas.
+- Estoque e farmácia.
+- Controle de suprimentos.
+- Módulo financeiro.
+
+## Tradução para o Dignidade 360
+
+O Dignidade 360 não deve virar um clone de home care genérico. Ele deve usar esses aprendizados para criar uma plataforma especializada em cuidados paliativos, navegação clínica, família, equipe multiprofissional, hospitais e clínicas.
+
+## Melhorias implementadas no projeto
+
+### 1. Módulo Implantação
+
+Adicionado para cobrir captação, elegibilidade, transição e início seguro do cuidado.
+
+Funções:
+
+- Esteira de implantação.
+- Elegibilidade clínica.
+- Avaliação social e domicílio.
+- Reunião familiar.
+- Autorização e plano inicial.
+- Checklist de início seguro.
+
+### 2. Módulo Escalas
+
+Adicionado para controlar visitas, plantões e equipe multiprofissional.
+
+Funções:
+
+- Escala por paciente.
+- Profissional, papel, local e horário.
+- Check-in/check-out demonstrativo.
+- Status da visita.
+- Checklist operacional.
+
+### 3. Módulo Suprimentos
+
+Adicionado para controle de materiais, equipamentos e kits.
+
+Funções:
+
+- Estoque por paciente/unidade.
+- Quantidade mínima.
+- Reposição.
+- Lote e validade.
+- Kits de cuidado.
+
+### 4. Módulo Faturamento
+
+Adicionado para gestores acompanharem autorizações, pacotes, receita e margem.
+
+Funções:
+
+- Pacote assistencial.
+- Pagador.
+- Autorização.
+- Valor.
+- Margem.
+- Pendências de aceite/prorrogação.
+
+### 5. Módulo Experiência
+
+Adicionado para participação da família e qualidade percebida.
+
+Funções:
+
+- Feedback da família.
+- Nota 0 a 10.
+- Canal de registro.
+- Histórico por paciente.
+- Indicador de experiência.
+
+## O que ainda deve entrar na próxima versão
+
+- Registro de intercorrências com anexo de imagem.
+- Evoluções estruturadas por profissão.
+- Prescrição e reconciliação medicamentosa integrada ao prontuário institucional.
+- Plano de cuidado com checagem por horário.
+- Mapa de escala com aceite/substituição.
+- App família ou portal família com relatório diário.
+- Integração financeira com contratos e TISS quando aplicável.
+- Integração com estoque real e dispensação farmacêutica.
+- Modo offline para equipe domiciliar.
+- Regras de alerta por protocolo clínico, não apenas score demonstrativo.
+
+## Diretriz estratégica
+
+SpinCare é referência operacional para Home Care. O Dignidade 360 deve ser referência em cuidado paliativo coordenado, mantendo três camadas:
+
+1. Jornada do paciente e família.
+2. Operação multiprofissional e segura.
+3. Gestão enterprise com dados, qualidade, custo, SLA e governança.

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Dignidade 360: plataforma demonstrativa para gestão de pacientes, cuidados paliativos, equipe assistencial e gestão enterprise."
+    />
+    <title>Dignidade 360 | Plataforma Enterprise</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <noscript>Ative o JavaScript para usar a plataforma Dignidade 360.</noscript>
+
+    <section class="login-screen" id="loginScreen">
+      <div class="login-hero">
+        <a class="brand login-brand" href="#" aria-label="Dignidade 360">
+          <span class="brand-mark">D360</span>
+          <span>
+            <strong>Dignidade 360</strong>
+            <small>Validação clínica controlada</small>
+          </span>
+        </a>
+        <div>
+          <p class="eyebrow">Acesso seguro por perfil</p>
+          <h1>Entre no ambiente certo para sua jornada de cuidado.</h1>
+          <p>
+            Pacientes, profissionais e gestores entram por fluxos separados, com permissões diferentes e trilha de auditoria
+            preparada para backend clínico.
+          </p>
+        </div>
+        <div class="assurance-grid">
+          <article><i data-lucide="user-round"></i><strong>Paciente</strong><span>Jornada individual</span></article>
+          <article><i data-lucide="stethoscope"></i><strong>Profissional</strong><span>Fila e cuidado</span></article>
+          <article><i data-lucide="chart-column"></i><strong>Gestor</strong><span>Operação e dados</span></article>
+        </div>
+      </div>
+
+      <div class="login-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Identificação</p>
+            <h2>Escolha o tipo de acesso</h2>
+          </div>
+        </div>
+
+        <div class="access-grid" id="accessGrid" role="tablist" aria-label="Tipo de acesso">
+          <button class="access-card active" type="button" data-login-role="patient">
+            <i data-lucide="heart-handshake"></i>
+            <strong>Paciente</strong>
+            <span>Plano, check-in, agenda e mensagens</span>
+          </button>
+          <button class="access-card" type="button" data-login-role="professional">
+            <i data-lucide="briefcase-medical"></i>
+            <strong>Profissional</strong>
+            <span>Pacientes, fila clínica e condutas</span>
+          </button>
+          <button class="access-card" type="button" data-login-role="manager">
+            <i data-lucide="building-2"></i>
+            <strong>Gestor</strong>
+            <span>Indicadores, unidades e auditoria</span>
+          </button>
+        </div>
+
+        <form class="login-form" data-form="login">
+          <input type="hidden" name="role" id="loginRole" value="patient" />
+          <label id="loginIdentifierLabel">
+            E-mail ou CPF do paciente
+            <input name="identifier" id="loginIdentifier" autocomplete="username" required value="helena.teste@d360.local" />
+          </label>
+          <label>
+            Senha
+            <input name="password" type="password" autocomplete="current-password" required value="validacao123" />
+          </label>
+          <label class="checkline">
+            <input type="checkbox" name="terms" required checked />
+            Confirmo que este acesso é para teste controlado com dados fictícios ou autorizados.
+          </label>
+          <button class="button primary" type="submit">
+            <i data-lucide="log-in"></i>
+            <span>Entrar</span>
+          </button>
+        </form>
+
+        <div class="login-support">
+          <i data-lucide="shield-check"></i>
+          <span id="loginProfileHint">Conta de teste: Helena Duarte. Senha: validacao123.</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="app-shell hidden" id="appShell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <a class="brand" href="#" data-action="go-dashboard" aria-label="Dignidade 360">
+          <span class="brand-mark">D360</span>
+          <span>
+            <strong>Dignidade 360</strong>
+            <small>Cuidados conectados</small>
+          </span>
+        </a>
+
+        <section class="context-card" aria-label="Contexto de acesso">
+          <div class="session-row">
+            <span id="sessionRole">Perfil</span>
+            <strong id="sessionActor">Usuário</strong>
+            <small id="sessionScope">Escopo de acesso</small>
+          </div>
+
+          <label id="patientContext">
+            Paciente ativo
+            <select id="patientSelect"></select>
+          </label>
+        </section>
+
+        <nav class="main-nav" id="mainNav"></nav>
+
+        <section class="sidebar-note">
+          <i data-lucide="shield-check"></i>
+          <span>Ambiente demonstrativo com sessão por perfil e persistência local no navegador.</span>
+        </section>
+
+        <button class="button ghost logout-button" type="button" data-action="logout">
+          <i data-lucide="log-out"></i>
+          <span>Sair</span>
+        </button>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="title-block">
+            <p class="eyebrow" id="viewKicker">Plataforma enterprise</p>
+            <h1 id="viewTitle">Painel</h1>
+            <p id="viewSubtitle">Gestão longitudinal, jornada do paciente e operação assistencial.</p>
+          </div>
+
+          <div class="top-actions">
+            <button class="button ghost" type="button" data-action="reset-demo" title="Restaurar dados de demonstração">
+              <i data-lucide="rotate-ccw"></i>
+              <span>Restaurar</span>
+            </button>
+            <button class="button ghost" type="button" data-action="simulate-day" title="Criar eventos fictícios">
+              <i data-lucide="sparkles"></i>
+              <span>Simular dia</span>
+            </button>
+            <button class="button primary" type="button" data-action="new-patient">
+              <i data-lucide="user-plus"></i>
+              <span>Novo paciente</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="clinical-warning">
+          <i data-lucide="circle-alert"></i>
+          <span>
+            Validação funcional. Para uso real com pacientes, conectar backend seguro, autenticação forte, banco de dados,
+            auditoria imutável, LGPD, governança clínica e aprovação institucional.
+          </span>
+        </section>
+
+        <section class="view-root" id="viewRoot" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <div class="modal-layer" id="modalRoot" aria-live="polite"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
