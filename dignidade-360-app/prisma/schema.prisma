@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Organization {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  users     User[]
+  patients  Patient[]
+  careLines CareLine[]
+  audits    Audit[]
+  consents  Consent[]
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  organizationId     String
+  name               String
+  role               String
+  email              String              @unique
+  password           String
+  active             Boolean             @default(true)
+  mustChangePassword Boolean             @default(true)
+  failedLoginAttempts Int                @default(0)
+  lockedUntil        DateTime?
+  lastLoginAt        DateTime?
+  passwordChangedAt  DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  organization       Organization        @relation(fields: [organizationId], references: [id])
+  consents           Consent[]
+  patientProfile     Patient?            @relation("PortalAccount")
+  caregiverGrants    CaregiverGrant[]
+  assignments        PatientAssignment[]
+  audits             Audit[]
+
+  @@index([organizationId, role])
+}
+
+model Consent {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  version        String
+  scopes         String
+  ipAddress      String?
+  acceptedAt     DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, userId])
+}
+
+model Patient {
+  id               String              @id @default(uuid())
+  organizationId   String
+  portalUserId     String?             @unique
+  name             String
+  age              Int
+  condition        String
+  unit             String
+  careLine         String
+  caregiverName    String?
+  professionalName String?
+  goal             String?
+  preference       String?
+  active           Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  organization     Organization        @relation(fields: [organizationId], references: [id])
+  portalUser       User?               @relation("PortalAccount", fields: [portalUserId], references: [id])
+  caregiverGrants  CaregiverGrant[]
+  assignments      PatientAssignment[]
+  checkins         Checkin[]
+  alerts           Alert[]
+  conducts         Conduct[]
+  timeline         TimelineEvent[]
+
+  @@index([organizationId, active])
+}
+
+model CaregiverGrant {
+  id         String   @id @default(uuid())
+  patientId  String
+  userId     String
+  grantedAt  DateTime @default(now())
+  revokedAt  DateTime?
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([patientId, userId])
+  @@index([userId, revokedAt])
+}
+
+model PatientAssignment {
+  id         String   @id @default(uuid())
+  patientId  String
+  userId     String
+  role       String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  patient    Patient  @relation(fields: [patientId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([patientId, userId, role])
+  @@index([userId, active])
+}
+
+model Checkin {
+  id        String   @id @default(uuid())
+  patientId String
+  pain      Int
+  breath    Int
+  anxiety   Int
+  fatigue   Int
+  appetite  Int
+  burden    Int
+  sleep     String
+  mobility  String
+  crisis    Boolean
+  note      String?
+  score     Int
+  level     String
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id])
+
+  @@index([patientId, createdAt])
+}
+
+model Alert {
+  id          String    @id @default(uuid())
+  patientId   String
+  title       String
+  severity    String
+  status      String
+  responsible String
+  slaMinutes  Int
+  source      String
+  description String
+  outcome     String?
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  patient     Patient   @relation(fields: [patientId], references: [id])
+  conducts    Conduct[]
+
+  @@index([patientId, status])
+  @@index([severity, status])
+}
+
+model Conduct {
+  id          String   @id @default(uuid())
+  patientId   String
+  alertId     String?
+  type        String
+  description String
+  author      String
+  createdAt   DateTime @default(now())
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  alert       Alert?   @relation(fields: [alertId], references: [id])
+
+  @@index([patientId, createdAt])
+}
+
+model TimelineEvent {
+  id          String   @id @default(uuid())
+  patientId   String
+  title       String
+  type        String
+  description String
+  author      String
+  createdAt   DateTime @default(now())
+  patient     Patient  @relation(fields: [patientId], references: [id])
+
+  @@index([patientId, createdAt])
+}
+
+model Audit {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String?
+  user           String
+  action         String
+  entity         String
+  detail         String
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  actor          User?        @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
+}
+
+model CareLine {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  criteria       String
+  sla            Int
+  team           String
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, name])
+}

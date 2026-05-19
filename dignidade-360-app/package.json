@@ -1,0 +1,36 @@
+{
+  "name": "dignidade-360-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "seed": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed.ts",
+    "db:setup": "prisma db push --force-reset && npm run seed",
+    "db:generate:postgres": "prisma generate --schema prisma/schema.postgres.prisma",
+    "db:migrate:postgres": "prisma migrate deploy --schema prisma/schema.postgres.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.12.0",
+    "bcryptjs": "^3.0.3",
+    "lucide-react": "^0.364.0",
+    "next": "14.1.4",
+    "next-auth": "^4.24.14",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.4",
+    "prisma": "^5.12.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}
