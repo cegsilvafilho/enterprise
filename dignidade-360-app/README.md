@@ -1,4 +1,4 @@
-# Dignidade 360 - MVP funcional local
+# Dignidade 360 - MVP funcional
 
 Esta pasta contem a versao dinamica do sistema, com:
 
@@ -10,7 +10,7 @@ Esta pasta contem a versao dinamica do sistema, com:
 - politica de senha forte e bloqueio temporario apos tentativas invalidas;
 - ativacao, desativacao e redefinicao de senha pelo gestor;
 - check-ins, alertas, fila assistencial, condutas, consentimento e auditoria;
-- banco SQLite local para testes e primeira validacao de fluxo.
+- banco PostgreSQL gerenciado para teste publicado e primeira validacao de fluxo.
 
 ## Requisitos
 
@@ -26,7 +26,7 @@ Esta pasta contem a versao dinamica do sistema, com:
    npm install
    ```
 
-4. Recrie o banco local e carregue os dados iniciais:
+4. Para teste local com PostgreSQL configurado, recrie o banco e carregue os dados iniciais:
 
    ```bash
    npm run db:setup
@@ -62,14 +62,22 @@ Todos usam a senha `Teste123!` apenas no ambiente local:
 6. Resolva um alerta com uma conduta.
 7. Entre como gestor e confira os indicadores e a auditoria.
 
-## Preparacao para producao
+## Preparacao para Vercel
 
 - `.env.example`: variaveis locais.
 - `.env.production.example`: modelo de configuracao hospedada.
-- `prisma/schema.prisma`: SQLite local.
-- `prisma/schema.postgres.prisma`: PostgreSQL para staging/producao.
-- `npm run db:generate:postgres`: gera o client Prisma para PostgreSQL.
-- `npm run db:migrate:postgres`: aplica migrations em PostgreSQL quando o banco gerenciado estiver configurado.
+- `prisma/schema.prisma`: PostgreSQL para Vercel/staging/producao.
+- `prisma/schema.postgres.prisma`: copia de referencia do esquema PostgreSQL.
+- `npm run build`: cria/atualiza tabelas com `prisma db push`, cria usuarios iniciais sem apagar dados existentes e compila o Next.js.
+
+Variaveis obrigatorias na Vercel:
+
+- `DATABASE_URL`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `INITIAL_ADMIN_EMAIL`
+- `INITIAL_ADMIN_PASSWORD`
+- `SEED_DEMO_DATA`
 
 ## Endpoints operacionais
 
