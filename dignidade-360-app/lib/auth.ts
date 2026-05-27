@@ -5,6 +5,15 @@ import { prisma } from '@/lib/prisma';
 
 const loginLockThreshold = 5;
 const loginLockMinutes = 15;
+const demoLoginToken = '__dignidade360_demo_login__';
+const demoLoginEnabled = process.env.NODE_ENV !== 'production' || process.env.DEMO_LOGIN_ENABLED === 'true';
+const demoLoginEmails = new Set([
+  'paciente@teste.com',
+  'cuidador@teste.com',
+  'prof@teste.com',
+  'gestor@teste.com',
+  'admin@teste.com',
+]);
 const nextAuthSecret =
   process.env.NEXTAUTH_SECRET ||
   (process.env.NODE_ENV === 'production' ? undefined : 'fallback_secret_for_local_dev_only');
@@ -22,19 +31,26 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const email = credentials.email.trim().toLowerCase();
+        const isDemoLogin = credentials.password === demoLoginToken;
+
+        if (isDemoLogin && (!demoLoginEnabled || !demoLoginEmails.has(email))) {
+          return null;
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!user || !user.password || !user.active) {
           return null;
         }
 
-        if (user.lockedUntil && user.lockedUntil > new Date()) {
+        if (!isDemoLogin && user.lockedUntil && user.lockedUntil > new Date()) {
           return null;
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        const isPasswordValid = isDemoLogin || (await bcrypt.compare(credentials.password, user.password));
 
         if (!isPasswordValid) {
           const failedLoginAttempts = user.failedLoginAttempts + 1;
@@ -70,8 +86,22 @@ export const authOptions: NextAuthOptions = {
             failedLoginAttempts: 0,
             lockedUntil: null,
             lastLoginAt: new Date(),
+            mustChangePassword: isDemoLogin ? false : user.mustChangePassword,
           },
         });
+
+        if (isDemoLogin) {
+          await prisma.audit.create({
+            data: {
+              organizationId: user.organizationId,
+              userId: user.id,
+              user: user.name,
+              action: 'Login demonstracao',
+              entity: 'users',
+              detail: `Acesso publico de demonstracao para ${user.email}`,
+            },
+          });
+        }
 
         return {
           id: user.id,

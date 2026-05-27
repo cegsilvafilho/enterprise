@@ -78,6 +78,10 @@ Variaveis obrigatorias na Vercel:
 - `INITIAL_ADMIN_EMAIL`
 - `INITIAL_ADMIN_PASSWORD`
 - `SEED_DEMO_DATA`
+- `DEMO_LOGIN_ENABLED`
+- `NEXT_PUBLIC_DEMO_LOGIN_ENABLED`
+
+Para demonstracoes publicas, deixe `DEMO_LOGIN_ENABLED=true` e `NEXT_PUBLIC_DEMO_LOGIN_ENABLED=true`. Isso libera botoes de acesso sem senha para contas ficticias (`paciente@teste.com`, `cuidador@teste.com`, `prof@teste.com`, `gestor@teste.com`, `admin@teste.com`). Antes de usar dados reais de pacientes, desative essas duas variaveis.
 
 ## Endpoints operacionais
 

@@ -4,6 +4,10 @@ import { FormEvent, useState } from 'react';
 import { Activity, BarChart, HeartHandshake, Settings, ShieldCheck, UserRound } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 
+const demoLoginToken = '__dignidade360_demo_login__';
+const demoLoginEnabled =
+  process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_DEMO_LOGIN_ENABLED === 'true';
+
 const demoUsers = [
   { email: 'paciente@teste.com', label: 'Paciente', icon: Activity },
   { email: 'cuidador@teste.com', label: 'Cuidador', icon: HeartHandshake },
@@ -45,7 +49,7 @@ export default function Login() {
   }
 
   async function handleDemoLogin(nextEmail: string) {
-    await authenticate(nextEmail, 'Teste123!');
+    await authenticate(nextEmail, demoLoginToken);
   }
 
   return (
@@ -60,7 +64,7 @@ export default function Login() {
         </div>
 
         <h1>Entre na plataforma.</h1>
-        <p>Use seu email e senha para acessar apenas as funcoes permitidas ao seu perfil.</p>
+        <p>Use seu email e senha ou escolha um perfil de demonstracao para acessar rapidamente.</p>
 
         <form className="form login-form" onSubmit={handleSubmit}>
           <label>
@@ -79,24 +83,33 @@ export default function Login() {
 
         <div className="notice">
           <ShieldCheck />
-          <span>Na validacao local, contas de demonstracao continuam disponiveis para testes rapidos.</span>
+          <span>
+            O acesso sem senha e apenas para demonstracao com dados ficticios. Desative antes de usar pacientes reais.
+          </span>
         </div>
       </main>
 
       <aside className="login-panel">
         <h2 className="eyebrow">Acessos de teste</h2>
-        <p>Para explorar o sistema agora, use qualquer perfil abaixo. A senha padrao e Teste123!.</p>
-        <div className="role-grid compact-grid">
-          {demoUsers.map((user) => (
-            <button key={user.email} onClick={() => handleDemoLogin(user.email)} disabled={loading}>
-              <user.icon />
-              <div>
-                <strong>{user.label}</strong>
-                <span>{user.email}</span>
-              </div>
-            </button>
-          ))}
-        </div>
+        <p>Para explorar o sistema agora, clique em um perfil. Nao precisa digitar email nem senha.</p>
+        {demoLoginEnabled ? (
+          <div className="role-grid compact-grid">
+            {demoUsers.map((user) => (
+              <button key={user.email} onClick={() => handleDemoLogin(user.email)} disabled={loading}>
+                <user.icon />
+                <div>
+                  <strong>{user.label}</strong>
+                  <span>Entrar sem senha</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="notice">
+            <ShieldCheck />
+            <span>Modo demonstracao desativado neste ambiente.</span>
+          </div>
+        )}
       </aside>
     </div>
   );

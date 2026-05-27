@@ -15,12 +15,24 @@ async function ensureUser(params: {
   role: string;
   email: string;
   passwordHash: string;
+  mustChangePassword?: boolean;
 }) {
+  const mustChangePassword = params.mustChangePassword ?? true;
   const existing = await prisma.user.findUnique({
     where: { email: params.email },
   });
 
   if (existing) {
+    if (!mustChangePassword && existing.mustChangePassword) {
+      return prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          mustChangePassword: false,
+          passwordChangedAt: new Date(),
+        },
+      });
+    }
+
     return existing;
   }
 
@@ -31,7 +43,8 @@ async function ensureUser(params: {
       role: params.role,
       email: params.email,
       password: params.passwordHash,
-      mustChangePassword: true,
+      mustChangePassword,
+      passwordChangedAt: mustChangePassword ? null : new Date(),
     },
   });
 }
@@ -72,6 +85,7 @@ async function main() {
     role: 'manager',
     email: 'gestor@teste.com',
     passwordHash,
+    mustChangePassword: false,
   });
 
   const professional = await ensureUser({
@@ -80,6 +94,7 @@ async function main() {
     role: 'professional',
     email: 'prof@teste.com',
     passwordHash,
+    mustChangePassword: false,
   });
 
   const caregiver = await ensureUser({
@@ -88,6 +103,7 @@ async function main() {
     role: 'caregiver',
     email: 'cuidador@teste.com',
     passwordHash,
+    mustChangePassword: false,
   });
 
   const patientUser = await ensureUser({
@@ -96,6 +112,16 @@ async function main() {
     role: 'patient',
     email: 'paciente@teste.com',
     passwordHash,
+    mustChangePassword: false,
+  });
+
+  await ensureUser({
+    organizationId: organization.id,
+    name: 'Admin Demonstracao',
+    role: 'admin',
+    email: 'admin@teste.com',
+    passwordHash,
+    mustChangePassword: false,
   });
 
   const patient = await prisma.patient.upsert({
