@@ -6,6 +6,7 @@ import {
   Activity,
   BarChart,
   BellRing,
+  ClipboardList,
   HeartHandshake,
   LayoutDashboard,
   ListChecks,
@@ -40,6 +41,7 @@ const roleConfig = {
     nav: [
       { path: '/dashboard', label: 'Paciente 360', icon: UserRound },
       { path: '/patients', label: 'Pacientes', icon: UsersRound },
+      { path: '/concierge', label: 'Concierge (demo)', icon: ClipboardList },
       { path: '/queue', label: 'Fila', icon: ListChecks },
     ],
   },
@@ -47,6 +49,7 @@ const roleConfig = {
     label: 'Gestor',
     nav: [
       { path: '/manager', label: 'Gestao', icon: BarChart },
+      { path: '/concierge', label: 'Concierge (demo)', icon: ClipboardList },
       { path: '/patients', label: 'Pacientes', icon: UsersRound },
       { path: '/queue', label: 'Fila', icon: ListChecks },
       { path: '/audit', label: 'Auditoria', icon: History },
@@ -56,6 +59,7 @@ const roleConfig = {
     label: 'Admin',
     nav: [
       { path: '/manager', label: 'Operacao', icon: Settings },
+      { path: '/concierge', label: 'Concierge (demo)', icon: ClipboardList },
       { path: '/patients', label: 'Pacientes', icon: UsersRound },
       { path: '/queue', label: 'Alertas', icon: BellRing },
       { path: '/consent', label: 'Governanca', icon: ShieldCheck },
