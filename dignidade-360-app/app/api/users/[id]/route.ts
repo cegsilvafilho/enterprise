@@ -25,6 +25,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!targetUser) {
     return NextResponse.json({ error: 'Usuario nao encontrado.' }, { status: 404 });
   }
+  // Managers may manage their staff but cannot change admins or peer managers.
+  if (currentUser.role === 'manager' && (targetUser.role === 'admin' || targetUser.role === 'manager')) {
+    return NextResponse.json({error:'A alteração de perfis privilegiados exige administrador.'},{status:403});
+  }
 
   const data = await request.json();
   const action = String(data.action || '');
