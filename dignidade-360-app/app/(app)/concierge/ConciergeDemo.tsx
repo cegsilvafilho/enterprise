@@ -30,6 +30,7 @@ export default function ConciergeDemo() {
   const [owner,setOwner] = useState('Navegação');
   const [due,setDue] = useState('2026-10-21');
   const [error,setError] = useState('');
+  const [outcomes,setOutcomes] = useState<Record<string,string>>({});
   const patient = people.find(p=>p.id===selected)!;
   const perTasks = tasks.filter(t=>t.personId===selected);
   const counts = useMemo(()=>({open:tasks.filter(t=>t.state!=='resolvida').length,missed:people.filter(p=>p.reach==='Não localizado').length,review:people.filter(p=>p.reach==='Avaliação profissional pendente').length}),[tasks]);
@@ -61,10 +62,11 @@ export default function ConciergeDemo() {
     setError('');
   }
   function closeTask(id:string){
-    const outcome=window.prompt('Qual resultado verificável foi alcançado? (apenas cenário fictício)');
-    if(!outcome?.trim()){setError('Ação mantida aberta: sem resultado documentado.');return;}
-    setTasks(list=>list.map(t=>t.id===id?{...t,state:'resolvida',outcome:outcome.trim()}:t));
+    const outcome=(outcomes[id]||'').trim();
+    if(outcome.length<8){setError('Descreva o resultado alcançado antes de concluir (mínimo de 8 caracteres).');return;}
+    setTasks(list=>list.map(t=>t.id===id?{...t,state:'resolvida',outcome}:t));
     audit(patient.id+' · ação '+id+' concluída com resultado documentado na simulação');
+    setOutcomes(list=>({...list,[id]:''}));
     setError('');
   }
   const future = 'https://business.whatsapp.com/';
@@ -91,7 +93,7 @@ export default function ConciergeDemo() {
           {contacts[selected]&&<p className="concierge-feedback">{contacts[selected]}</p>}
         </section>
         <section className="concierge-section"><h2>Ações e pendências</h2>{perTasks.length===0&&<p>Sem ação cadastrada neste cenário.</p>}
-          {perTasks.map(t=><article className="concierge-task" key={t.id}><div><strong>{t.title}</strong><small>{t.owner} · prazo {t.due} · {t.id}</small>{t.outcome&&<small>Resultado: {t.outcome}</small>}</div><div className="concierge-actions"><select aria-label={'Estado da ação '+t.id} value={t.state} disabled={t.state==='resolvida'} onChange={e=>changeTask(t.id,e.target.value as State)}>{Object.entries(labels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>{t.state!=='resolvida'&&<button type="button" onClick={()=>closeTask(t.id)}>Concluir com resultado</button>}</div></article>)}
+          {perTasks.map(t=><article className="concierge-task" key={t.id}><div><strong>{t.title}</strong><small>{t.owner} · prazo {t.due} · {t.id}</small>{t.outcome&&<small>Resultado: {t.outcome}</small>}</div><div className="concierge-actions"><select aria-label={'Estado da ação '+t.id} value={t.state} disabled={t.state==='resolvida'} onChange={e=>changeTask(t.id,e.target.value as State)}>{Object.entries(labels).filter(([v])=>v!=='resolvida'||t.state==='resolvida').map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>{t.state!=='resolvida'&&<><input aria-label={'Resultado alcançado para ação '+t.id} value={outcomes[t.id]||''} maxLength={500} placeholder="Descreva o resultado verificável" onChange={e=>setOutcomes(list=>({...list,[t.id]:e.target.value}))}/><button type="button" onClick={()=>closeTask(t.id)}>Concluir com resultado</button></>}</div></article>)}
           <h3>Nova ação</h3><label>O que deve ser resolvido?<input value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Ex.: confirmar retorno da equipe" /></label><div className="concierge-two"><label>Responsável<input value={owner} onChange={e=>setOwner(e.target.value)}/></label><label>Prazo<input type="date" value={due} onChange={e=>setDue(e.target.value)}/></label></div><button type="button" onClick={createTask}>Adicionar ação</button>
         </section>
         <section className="concierge-section"><h2>Comunicação e inteligência</h2><div className="concierge-facts"><div><small>WhatsApp</small><p>Integração simulada, sem envio ou webhook.</p></div><div><small>Power BI</small><p>Indicadores locais de demonstração; sem publicação de dados.</p></div></div><small>Preparação técnica: <a href={future} target="_blank" rel="noreferrer">WhatsApp Business Platform</a>. A futura integração exigirá autorização, privacidade e fluxo de retaguarda.</small></section>
