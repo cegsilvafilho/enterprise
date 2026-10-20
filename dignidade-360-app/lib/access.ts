@@ -132,8 +132,10 @@ export async function canAccessPatient(user: CurrentUser, patientId: string) {
 }
 
 export async function getPreferredPatient(user: CurrentUser, requestedPatientId?: string | null) {
-  if (requestedPatientId && (await canAccessPatient(user, requestedPatientId))) {
-    return prisma.patient.findUnique({ where: { id: requestedPatientId } });
+  // Never silently substitute a different patient's chart after an unauthorized ID.
+  if (requestedPatientId) {
+    if (!(await canAccessPatient(user, requestedPatientId))) return null;
+    return prisma.patient.findUnique({where:{id:requestedPatientId,organizationId:user.organizationId}});
   }
 
   const patients = await getAccessiblePatients(user);
