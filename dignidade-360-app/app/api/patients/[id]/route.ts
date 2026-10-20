@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageUsers, getCurrentUser } from '@/lib/access';
+import { canManageUsers, getAuthorizedUser } from '@/lib/access';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as any)?.id);
 
   if (!currentUser || !canManageUsers(currentUser.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
