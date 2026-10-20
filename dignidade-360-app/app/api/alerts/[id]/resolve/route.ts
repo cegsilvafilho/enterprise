@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { canAccessPatient, canResolveAlerts, getCurrentUser } from '@/lib/access';
+import { canAccessPatient, canResolveAlerts, getAuthorizedUser } from '@/lib/access';
 
 const permittedOutcomes = new Set([
   'Orientacao',
@@ -13,7 +13,7 @@ const permittedOutcomes = new Set([
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
-  const actor = await getCurrentUser((session?.user as { id?: string } | undefined)?.id);
+  const actor = await getAuthorizedUser((session?.user as { id?: string } | undefined)?.id);
   if (!actor || !canResolveAlerts(actor.role)) {
     return NextResponse.json({error:'A resolução exige profissional assistencial autorizado.'},{status:403});
   }
