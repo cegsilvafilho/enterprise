@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageUsers, getAccessiblePatients, getCurrentUser } from '@/lib/access';
+import { canManageUsers, getAccessiblePatients, getAuthorizedUser } from '@/lib/access';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as any)?.id);
 
   if (!currentUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as any)?.id);
 
   if (!currentUser || !canManageUsers(currentUser.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
