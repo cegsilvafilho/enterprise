@@ -22,7 +22,7 @@ export function canManageUsers(role: AppRole) {
 }
 
 export function canResolveAlerts(role: AppRole) {
-  return role === 'professional' || role === 'admin';
+  return role === 'professional';
 }
 
 export function canViewQueue(role: AppRole) {
