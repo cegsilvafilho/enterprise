@@ -1,6 +1,11 @@
 name: Dignare Concierge - qualidade da branch
 
 on:
+  push:
+    branches: ['feat/dignare-concierge-mvp-20261020']
+    paths:
+      - 'dignidade-360-app/**'
+      - '.github/workflows/dignare-concierge-qa.yml'
   pull_request:
     paths:
       - 'dignidade-360-app/**'
