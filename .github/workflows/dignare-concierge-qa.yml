@@ -1,0 +1,57 @@
+name: Dignare Concierge - qualidade da branch
+
+on:
+  pull_request:
+    paths:
+      - 'dignidade-360-app/**'
+      - '.github/workflows/dignare-concierge-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Typecheck, lint and Next build
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: dignidade-360-app
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout reviewed code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c2be1cb # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Use Node 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dignidade-360-app/package-lock.json
+      - name: Install exact locked dependencies
+        run: npm ci
+      - name: Build without mutating database or seeding
+        run: npm run build
+  security:
+    name: Runtime dependency audit
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: dignidade-360-app
+    steps:
+      - name: Checkout reviewed code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c2be1cb # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Use Node 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dignidade-360-app/package-lock.json
+      - name: Install dependencies without executing package scripts
+        run: npm ci --ignore-scripts
+      - name: Block unreviewed critical vulnerabilities in runtime dependencies
+        run: npm audit --omit=dev --audit-level=critical
