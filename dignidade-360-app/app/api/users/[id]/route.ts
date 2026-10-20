@@ -4,11 +4,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageUsers, getCurrentUser } from '@/lib/access';
+import { canManageUsers, getAuthorizedUser } from '@/lib/access';
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as any)?.id);
 
   if (!currentUser || !canManageUsers(currentUser.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -16,13 +17,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const targetUser = await prisma.user.findFirst({
     where: {
-      id: params.id,
+      id,
       organizationId: currentUser.organizationId,
     },
   });
 
   if (!targetUser) {
     return NextResponse.json({ error: 'Usuario nao encontrado.' }, { status: 404 });
+  }
+  // Managers may manage their staff but cannot change admins or peer managers.
+  if (currentUser.role === 'manager' && (targetUser.role === 'admin' || targetUser.role === 'manager')) {
+    return NextResponse.json({error:'A alteração de perfis privilegiados exige administrador.'},{status:403});
   }
 
   const data = await request.json();

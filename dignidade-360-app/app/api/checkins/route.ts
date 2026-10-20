@@ -2,131 +2,119 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { canAccessPatient, getCurrentUser, getPreferredPatient } from '@/lib/access';
+import { canAccessPatient, getAuthorizedUser, getPreferredPatient } from '@/lib/access';
 
-function calculatePriority(checkin: any) {
-  const appetitePenalty = Math.max(0, 10 - Number(checkin.appetite || 0)) * 2;
-  const sleepPenalty = checkin.sleep === 'Ruim' ? 10 : checkin.sleep === 'Interrompido' ? 5 : 0;
-  const mobilityPenalty = checkin.mobility === 'Restrito ao leito' ? 12 : checkin.mobility === 'Precisa de ajuda' ? 5 : 0;
-  const crisisPenalty = checkin.crisis ? 32 : 0;
-  const score = Math.min(
-    100,
-    Math.round(
-      Number(checkin.pain || 0) * 5.7 +
-        Number(checkin.breath || 0) * 6.5 +
-        Number(checkin.anxiety || 0) * 3.4 +
-        Number(checkin.fatigue || 0) * 3.2 +
-        Number(checkin.burden || 0) * 3.1 +
-        appetitePenalty +
-        sleepPenalty +
-        mobilityPenalty +
-        crisisPenalty,
-    ),
-  );
+const fields = ['pain','breath','anxiety','fatigue','appetite','burden'] as const;
+const sleepOptions = new Set(['Normal','Interrompido','Ruim']);
+const mobilityOptions = new Set(['Independente','Precisa de ajuda','Restrito ao leito']);
 
-  if (score >= 80 || checkin.crisis) return { level: 'critical', label: 'Critica', score };
-  if (score >= 60) return { level: 'high', label: 'Alta', score };
-  if (score >= 35) return { level: 'moderate', label: 'Moderada', score };
-  return { level: 'low', label: 'Baixa', score };
+function parseScale(value: unknown): number | null {
+  if (value === '' || value === null || value === undefined) return null;
+  const n = typeof value === 'number' || typeof value === 'string' ? Number(value) : NaN;
+  return Number.isInteger(n) && n >= 0 && n <= 10 ? n : null;
 }
 
+// IMPORTANT: these are patient-reported observations, NOT a validated clinical risk score.
+// Clinical severity and event priority must be determined by an authorized professional.
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as {id?:string}|undefined)?.id);
 
-  if (!currentUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (currentUser.role !== 'patient' && currentUser.role !== 'caregiver') {
+    return NextResponse.json({ error: 'Este formulário é reservado a relato de paciente ou cuidador autorizado.' }, { status: 403 });
   }
 
-  const data = await request.json();
-  if (data.patientId && !(await canAccessPatient(currentUser, data.patientId))) {
+  let data: Record<string, unknown>;
+  try {
+    data = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido.' }, { status: 400 });
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return NextResponse.json({ error: 'Estrutura inválida.' }, { status: 400 });
+  }
+
+  const observed = {} as Record<typeof fields[number],number>;
+  for (const field of fields) {
+    const n = parseScale(data[field]);
+    if (n === null) return NextResponse.json({ error: 'Escala inválida: '+field+' (0 a 10).' }, { status: 400 });
+    observed[field] = n;
+  }
+  if (!sleepOptions.has(String(data.sleep)) || !mobilityOptions.has(String(data.mobility))) {
+    return NextResponse.json({ error: 'Escolhas de sono ou mobilidade inválidas.' }, { status: 400 });
+  }
+  if (typeof data.crisis !== 'boolean') {
+    return NextResponse.json({ error: 'O campo de percepção de sinais de alerta deve ser booleano.' }, { status: 400 });
+  }
+  if (data.note !== undefined && (typeof data.note !== 'string' || data.note.length > 2000)) {
+    return NextResponse.json({ error: 'Observação inválida ou longa demais.' }, { status: 400 });
+  }
+  const note = typeof data.note === 'string' ? data.note.trim() : '';
+  const requestedPatientId = data.patientId === undefined ? undefined : data.patientId;
+  if (requestedPatientId !== undefined && (typeof requestedPatientId !== 'string' || requestedPatientId.length > 128)) {
+    return NextResponse.json({ error: 'Identificador de paciente inválido.' }, { status: 400 });
+  }
+  if (requestedPatientId && !(await canAccessPatient(currentUser, requestedPatientId))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
-
-  const patient = data.patientId
-    ? await prisma.patient.findUnique({ where: { id: data.patientId } })
+  const patient = requestedPatientId
+    ? await prisma.patient.findFirst({where:{id:requestedPatientId,organizationId:currentUser.organizationId,active:true}})
     : await getPreferredPatient(currentUser);
 
-  if (!patient) {
-    return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
-  }
+  if (!patient) return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
 
-  const risk = calculatePriority(data);
-
-  await prisma.checkin.create({
-    data: {
-      patientId: patient.id,
-      pain: Number(data.pain),
-      breath: Number(data.breath),
-      anxiety: Number(data.anxiety),
-      fatigue: Number(data.fatigue),
-      appetite: Number(data.appetite),
-      burden: Number(data.burden),
-      sleep: data.sleep,
-      mobility: data.mobility,
-      crisis: Boolean(data.crisis),
-      note: data.note,
-      score: risk.score,
-      level: risk.level,
-    },
-  });
-
-  await prisma.timelineEvent.create({
-    data: {
-      patientId: patient.id,
-      title: `Check-in ${risk.label}`,
-      type: 'Check-in',
-      description: data.note || `Escore ${risk.score}/100`,
-      author: currentUser.name,
-    },
-  });
-
-  await prisma.audit.create({
-    data: {
-      organizationId: currentUser.organizationId,
-      userId: currentUser.id,
-      user: currentUser.name,
-      action: 'Registrou check-in',
-      entity: 'checkins',
-      detail: `${patient.name} - prioridade ${risk.label}`,
-    },
-  });
-
-  if (risk.level !== 'low') {
-    const sla = risk.level === 'critical' ? 30 : risk.level === 'high' ? 120 : 1440;
-    const alert = await prisma.alert.create({
+  // No automated clinical prioritization or urgency SLA. This event only requests human review.
+  await prisma.$transaction(async (tx) => {
+    await tx.checkin.create({
       data: {
         patientId: patient.id,
-        title: risk.level === 'critical' ? 'Crise ou sofrimento intenso' : 'Check-in requer acompanhamento',
-        severity: risk.level,
+        pain: observed.pain,
+        breath: observed.breath,
+        anxiety: observed.anxiety,
+        fatigue: observed.fatigue,
+        appetite: observed.appetite,
+        burden: observed.burden,
+        sleep: String(data.sleep),
+        mobility: String(data.mobility),
+        crisis: data.crisis as boolean,
+        note,
+        score: 0, // Legacy non-null DB field: nullability migration is a release prerequisite.
+        level: 'unclassified',
+      },
+    });
+    await tx.timelineEvent.create({
+      data: {
+        patientId: patient.id,
+        title: 'Relato recebido — aguardando avaliação humana',
+        type: 'Check-in não classificado',
+        description: note || 'Relato recebido, sem cálculo de risco ou conclusão clínica.',
+        author: currentUser.name,
+      },
+    });
+    await tx.alert.create({
+      data: {
+        patientId: patient.id,
+        title: 'Novo relato: revisão humana pendente',
+        severity: 'unclassified',
         status: 'new',
-        responsible: patient.professionalName || 'Equipe assistencial',
-        slaMinutes: sla,
-        source: 'Check-in',
-        description: `Dor ${data.pain}/10, falta de ar ${data.breath}/10, ansiedade ${data.anxiety}/10, fadiga ${data.fatigue}/10.`,
+        responsible: 'A atribuir pela equipe',
+        slaMinutes: 0, // No automatic SLA; not a promise of response.
+        source: 'Relato de paciente/cuidador — sem triagem automática',
+        description: 'Relato recebido; a equipe deverá avaliar no fluxo assistencial autorizado.',
       },
     });
-
-    await prisma.timelineEvent.create({
-      data: {
-        patientId: patient.id,
-        title: alert.title,
-        type: 'Alerta',
-        description: alert.description,
-        author: 'Sistema',
-      },
-    });
-
-    await prisma.audit.create({
+    await tx.audit.create({
       data: {
         organizationId: currentUser.organizationId,
-        user: 'Sistema',
-        action: 'Criou alerta',
-        entity: 'alerts',
-        detail: `${patient.name} - ${alert.title}`,
+        userId: currentUser.id,
+        user: currentUser.name,
+        action: 'Registrou relato nao classificado',
+        entity: 'checkins',
+        detail: 'Registro recebido para avaliação humana — '+patient.id,
       },
     });
-  }
+  });
 
-  return NextResponse.json({ success: true, risk, patientId: patient.id });
+  return NextResponse.json({success:true, status:'pending_human_review', clinicalRiskClassified:false, patientId:patient.id});
 }

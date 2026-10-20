@@ -22,7 +22,7 @@ export function canManageUsers(role: AppRole) {
 }
 
 export function canResolveAlerts(role: AppRole) {
-  return role === 'professional' || role === 'admin';
+  return role === 'professional';
 }
 
 export function canViewQueue(role: AppRole) {
@@ -51,6 +51,12 @@ export async function getCurrentUser(userId: string | undefined) {
 
   if (!user || !user.active || !isAppRole(user.role)) return null;
   return user as CurrentUser;
+}
+
+// Route handlers must not expose clinical operations before mandatory password change.
+export async function getAuthorizedUser(userId: string | undefined) {
+  const actor = await getCurrentUser(userId);
+  return actor && !actor.mustChangePassword ? actor : null;
 }
 
 export async function getAccessiblePatients(user: CurrentUser) {
@@ -132,8 +138,10 @@ export async function canAccessPatient(user: CurrentUser, patientId: string) {
 }
 
 export async function getPreferredPatient(user: CurrentUser, requestedPatientId?: string | null) {
-  if (requestedPatientId && (await canAccessPatient(user, requestedPatientId))) {
-    return prisma.patient.findUnique({ where: { id: requestedPatientId } });
+  // Never silently substitute a different patient's chart after an unauthorized ID.
+  if (requestedPatientId) {
+    if (!(await canAccessPatient(user, requestedPatientId))) return null;
+    return prisma.patient.findUnique({where:{id:requestedPatientId,organizationId:user.organizationId}});
   }
 
   const patients = await getAccessiblePatients(user);

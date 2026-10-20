@@ -6,7 +6,8 @@ import { prisma } from '@/lib/prisma';
 const loginLockThreshold = 5;
 const loginLockMinutes = 15;
 const demoLoginToken = '__dignidade360_demo_login__';
-const demoLoginEnabled = process.env.NODE_ENV !== 'production' || process.env.DEMO_LOGIN_ENABLED === 'true';
+// Demo sign-in is allowed only in explicitly opted-in LOCAL development. Never on hosted preview/production.
+const demoLoginEnabled = process.env.NODE_ENV !== 'production' && process.env.DEMO_LOGIN_ENABLED === 'true';
 const demoLoginEmails = new Set([
   'paciente@teste.com',
   'cuidador@teste.com',

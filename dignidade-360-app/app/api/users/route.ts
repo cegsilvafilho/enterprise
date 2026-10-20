@@ -3,12 +3,12 @@ import bcrypt from 'bcryptjs';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { appRoles, canManageUsers, getCurrentUser, isAppRole } from '@/lib/access';
+import { appRoles, canManageUsers, getAuthorizedUser, isAppRole } from '@/lib/access';
 import { validatePassword } from '@/lib/password';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as any)?.id);
 
   if (!currentUser || !canManageUsers(currentUser.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -36,7 +36,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as any)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as any)?.id);
 
   if (!currentUser || !canManageUsers(currentUser.role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -54,6 +54,11 @@ export async function POST(request: Request) {
       { error: `Informe nome, email, perfil valido. ${passwordValidation.message}` },
       { status: 400 },
     );
+  }
+
+  // A manager cannot grant administrator/manager privileges.
+  if (currentUser.role === 'manager' && (role === 'admin' || role === 'manager')) {
+    return NextResponse.json({error:'Somente o administrador pode criar contas privilegiadas.'},{status:403});
   }
 
   const exists = await prisma.user.findUnique({ where: { email } });

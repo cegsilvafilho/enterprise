@@ -36,7 +36,7 @@ export default function AlertClient({
     <div className="grid-2 wide-left">
       <section className="panel">
         <header className="panel-head">
-          <h2>Alertas Ativos</h2>
+          <h2>Eventos e relatos pendentes</h2>
         </header>
         <div className="card-list">
           {initialAlerts.length === 0 && <p>Nenhum alerta aberto no momento.</p>}
@@ -51,7 +51,7 @@ export default function AlertClient({
               <div>
                 <strong>{alert.title}</strong>
                 <span>
-                  {alert.patient.name} - {alert.severity === 'critical' ? 'Critica' : 'Moderada'}
+                  {alert.patient.name} · {alert.severity === 'unclassified' ? 'Aguardando revisão humana' : alert.severity === 'critical' ? 'Crítica (legado)' : 'Classificação anterior a revisar'}
                 </span>
               </div>
               <span className={`pill ${alert.severity === 'critical' ? 'critical' : 'warning'}`}>
@@ -75,7 +75,7 @@ export default function AlertClient({
             </article>
             <article>
               <span>Gravidade</span>
-              <strong>{selectedAlert.severity}</strong>
+              <strong>{selectedAlert.severity === 'unclassified' ? 'Não classificado' : selectedAlert.severity + ' — verificar validade clínica'}</strong>
             </article>
             <article>
               <span>Responsavel</span>
@@ -95,8 +95,8 @@ export default function AlertClient({
                   Tipo de Conduta
                   <select value={formData.type} onChange={(event) => setFormData({ ...formData, type: event.target.value })}>
                     <option>Orientacao</option>
-                    <option>Ajuste de prescricao</option>
-                    <option>Acionamento de emergencia</option>
+                    <option>Encaminhamento para avaliação de prescrição</option>
+                    <option>Orientação para procurar urgência conforme protocolo</option>
                     <option>Reuniao familiar</option>
                   </select>
                 </label>

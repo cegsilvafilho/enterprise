@@ -38,7 +38,7 @@ export default function CheckinPage() {
       <header className="topbar">
         <div>
           <h1>Check-in de Sintomas</h1>
-          <span className="view-kicker">Avaliação contínua</span>
+          <span className="view-kicker">Relato do paciente / não substitui avaliação profissional</span>
         </div>
       </header>
       
@@ -85,17 +85,17 @@ export default function CheckinPage() {
             </label>
 
             <div className="actions">
-              <button type="submit" className="primary">Salvar Check-in e Enviar</button>
+              <button type="submit" className="primary">Enviar relato para revisão</button>
             </div>
           </form>
         </section>
         
         <aside className="panel">
           <header className="panel-head">
-            <h2>Prévia de Risco</h2>
+            <h2>Como a equipe recebe seu relato</h2>
           </header>
           <div className="notice">
-            <span>O sistema calcula automaticamente a prioridade baseada nas respostas, gerando alertas para a equipe em caso de piora significativa.</span>
+            <span>As respostas ficam registradas para revisão por profissional. O sistema não calcula gravidade clínica nem garante resposta imediata. Se houver uma emergência, ligue 192 (SAMU) ou procure o serviço de urgência indicado no seu plano.</span>
           </div>
         </aside>
       </div>

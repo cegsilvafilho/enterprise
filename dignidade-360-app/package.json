@@ -4,35 +4,41 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma db push && ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed-production.ts && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "seed": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed.ts",
     "db:setup": "prisma db push --force-reset && npm run seed",
     "db:push": "prisma db push",
-    "seed:production": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed-production.ts",
+    "seed:production": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed-production.ts",
     "db:generate:postgres": "prisma generate --schema prisma/schema.postgres.prisma",
-    "db:migrate:postgres": "prisma migrate deploy --schema prisma/schema.postgres.prisma"
+    "db:migrate:postgres": "prisma migrate deploy --schema prisma/schema.postgres.prisma",
+    "db:prepare": "prisma db push"
   },
   "dependencies": {
     "@prisma/client": "^5.12.0",
     "bcryptjs": "^3.0.3",
-    "lucide-react": "^0.364.0",
-    "next": "14.1.4",
-    "next-auth": "^4.24.14",
-    "react": "^18",
-    "react-dom": "^18"
+    "lucide-react": "0.549.0",
+    "next": "15.5.28",
+    "next-auth": "4.24.15",
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "eslint": "^8",
-    "eslint-config-next": "14.1.4",
+    "eslint-config-next": "15.5.28",
     "prisma": "^5.12.0",
     "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "overrides": {
+    "nanoid": "3.3.18",
+    "postcss": "8.5.23",
+    "source-map-js": "1.2.2"
   }
 }
