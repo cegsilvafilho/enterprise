@@ -56,10 +56,11 @@ export default async function Dashboard({
       : latestCheckin.level === 'high'
         ? 'Alta'
         : latestCheckin.level === 'moderate'
-          ? 'Moderada'
-          : 'Baixa'
+          ? 'Moderada (legado não validado)'
+          : latestCheckin.level === 'low'
+            ? 'Baixa (legado não validado)'
+            : 'Aguardando revisão humana'
     : 'N/A';
-  const riskScore = latestCheckin ? latestCheckin.score : 0;
   const criticalAlertsCount = patient.alerts.filter((alert) => alert.severity === 'critical').length;
 
   return (
@@ -82,7 +83,7 @@ export default async function Dashboard({
         <article className="metric">
           <span>Prioridade atual</span>
           <strong>{riskLabel}</strong>
-          <small>Escore {riskScore}/100</small>
+          <small>Sem escore clínico validado para decisão automática</small>
         </article>
         <article className="metric">
           <span>Alertas abertos</span>
@@ -91,8 +92,8 @@ export default async function Dashboard({
         </article>
         <article className="metric">
           <span>Plano de crise</span>
-          <strong>{patient.goal ? 'Ativo' : 'Pendente'}</strong>
-          <small>{patient.careLine}</small>
+          <strong>Não verificado</strong>
+          <small>A existência deve ser confirmada no prontuário oficial</small>
         </article>
       </section>
 
