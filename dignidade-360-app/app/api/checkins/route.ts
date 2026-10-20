@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { canAccessPatient, getCurrentUser, getPreferredPatient } from '@/lib/access';
+import { canAccessPatient, getAuthorizedUser, getPreferredPatient } from '@/lib/access';
 
 const fields = ['pain','breath','anxiety','fatigue','appetite','burden'] as const;
 const sleepOptions = new Set(['Normal','Interrompido','Ruim']);
@@ -18,7 +18,7 @@ function parseScale(value: unknown): number | null {
 // Clinical severity and event priority must be determined by an authorized professional.
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const currentUser = await getCurrentUser((session?.user as {id?:string}|undefined)?.id);
+  const currentUser = await getAuthorizedUser((session?.user as {id?:string}|undefined)?.id);
 
   if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (currentUser.role !== 'patient' && currentUser.role !== 'caregiver') {
