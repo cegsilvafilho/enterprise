@@ -53,6 +53,12 @@ export async function getCurrentUser(userId: string | undefined) {
   return user as CurrentUser;
 }
 
+// Route handlers must not expose clinical operations before mandatory password change.
+export async function getAuthorizedUser(userId: string | undefined) {
+  const actor = await getCurrentUser(userId);
+  return actor && !actor.mustChangePassword ? actor : null;
+}
+
 export async function getAccessiblePatients(user: CurrentUser) {
   if (user.role === 'manager' || user.role === 'admin') {
     return prisma.patient.findMany({
