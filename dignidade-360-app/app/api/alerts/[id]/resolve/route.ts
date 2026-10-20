@@ -6,9 +6,9 @@ import { canAccessPatient, canResolveAlerts, getCurrentUser } from '@/lib/access
 
 const permittedOutcomes = new Set([
   'Orientacao',
-  'Encaminhamento para avaliacao de prescricao',
-  'Orientacao para procurar urgencia conforme protocolo',
-  'Reuniao familiar',
+  'Encaminhamento para avaliação de prescrição',
+  'Orientação para procurar urgência conforme protocolo',
+  'Reunião familiar',
 ]);
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
