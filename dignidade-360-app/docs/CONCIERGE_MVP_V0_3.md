@@ -30,3 +30,30 @@ Conferência estática feita: arquivo de rota presente, verificação de sessão
 
 ## Próximo passo
 Preparar preview de branch não produtiva, avaliar renderização/teclado/mobile, testar persona sem autorização, exercício clínico com dados sintéticos e revisão de segurança. Não fazer merge automático para main.
+
+
+## Incremento v0.4 — modernização e segurança (20/10/2026)
+- Next.js `15.5.28`, React/React DOM `19.2.9`, next-auth `4.24.15`, lucide-react `0.549.0` com lockfile regenerado.
+- Correções transitivas travadas: nanoid `3.3.18`, postcss `8.5.23`, source-map-js `1.2.2`.
+- TypeScript e compilação Next 15 aprovados no GitHub Actions run `39515465617`. A auditoria `npm audit --omit=dev --audit-level=critical` retornou **found 0 vulnerabilities** nesse run. Este resultado refere-se **às dependências de execução**, não substitui teste de penetração, análise LGPD ou auditoria abrangente do ambiente.
+- Novo `getAuthorizedUser`: endpoints clínicos/operacionais não aceitam sessão com troca obrigatória de senha pendente; `/api/account/change-password` permanece disponível para concluir o primeiro acesso.
+- Gestor não consegue criar contas manager/admin nem alterar/resetar contas privilegiadas; somente admin pode gerenciar esses papéis.
+- Rotas dinâmicas e dashboard adaptadas aos parâmetros assíncronos de Next 15.
+- Resolver alerta: profissional assistencial, tipo de resultado validado, descrição mínima, registro em transação, prevenção de dupla conclusão. Administrativo não encerra condutas.
+- Acesso demonstrativo sem senha vetado nos ambientes hospedados. A rota `/demo/concierge` é estática e sintética.
+- Workflow temporário de geração de lockfile com permissão de escrita removido após atualização.
+
+## Ponto de atenção para próximos gates
+1. Auditar a totalidade dos pacotes incluindo dependências de desenvolvimento e versão do Node; atualizar compatibilidades restantes com a política da equipe.
+2. Testar fluxos manualmente e com Playwright (mobile, desktop, teclado, ações inválidas, acesso sem permissão e tentativa de selecionar outro paciente).
+3. Ensaiar a autenticação real com dados **fictícios em banco próprio de staging**, sessão encerrada/revogação de usuário, isolamento multi-organização e verificação de MFA.
+4. Validar regras de triagem, janela de cobertura, falhas de comunicação, escalonamento e prontuário com RT; `unclassified` não é estado clínico nem substitui urgência.
+5. Auditoria do produto legado e privacidade: papéis gestores/admin ainda exigem menor privilégio comprovado; não colocar PHI até isso ser realizado.
+6. Disponibilizar Vercel Preview somente para teste com dados fictícios; publicação READY não indica homologação clínica.
+
+## Estado de liberação
+- Engenharia: build e TypeScript passam; auditoria runtime 0 vulnerabilidades reportadas no run referenciado.
+- Segurança: **em revisão**.
+- Fluxo clínico: **em revisão**.
+- Integração de prontuário, WhatsApp e Power BI: **não implantada**.
+- Produção: **não autorizado**. Pull request permanece em rascunho.
