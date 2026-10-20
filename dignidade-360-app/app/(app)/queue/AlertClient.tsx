@@ -95,8 +95,8 @@ export default function AlertClient({
                   Tipo de Conduta
                   <select value={formData.type} onChange={(event) => setFormData({ ...formData, type: event.target.value })}>
                     <option>Orientacao</option>
-                    <option>Ajuste de prescricao</option>
-                    <option>Acionamento de emergencia</option>
+                    <option>Encaminhamento para avaliação de prescrição</option>
+                    <option>Orientação para procurar urgência conforme protocolo</option>
                     <option>Reuniao familiar</option>
                   </select>
                 </label>
