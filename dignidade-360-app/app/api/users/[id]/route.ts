@@ -6,7 +6,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageUsers, getCurrentUser } from '@/lib/access';
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   const currentUser = await getCurrentUser((session?.user as any)?.id);
 
@@ -16,7 +17,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const targetUser = await prisma.user.findFirst({
     where: {
-      id: params.id,
+      id,
       organizationId: currentUser.organizationId,
     },
   });
