@@ -56,6 +56,11 @@ export async function POST(request: Request) {
     );
   }
 
+  // A manager cannot grant administrator/manager privileges.
+  if (currentUser.role === 'manager' && (role === 'admin' || role === 'manager')) {
+    return NextResponse.json({error:'Somente o administrador pode criar contas privilegiadas.'},{status:403});
+  }
+
   const exists = await prisma.user.findUnique({ where: { email } });
   if (exists) {
     return NextResponse.json({ error: 'Ja existe um usuario com este email.' }, { status: 409 });
