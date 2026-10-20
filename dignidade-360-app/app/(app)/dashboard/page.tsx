@@ -16,7 +16,7 @@ function formatDate(value: Date) {
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams?: { patientId?: string };
+  searchParams?: Promise<{ patientId?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const currentUser = await getCurrentUser((session?.user as any)?.id);
@@ -25,7 +25,8 @@ export default async function Dashboard({
     redirect('/login');
   }
 
-  const preferredPatient = await getPreferredPatient(currentUser, searchParams?.patientId);
+  const query = searchParams ? await searchParams : undefined;
+  const preferredPatient = await getPreferredPatient(currentUser, query?.patientId);
 
   if (!preferredPatient) {
     return (
@@ -52,9 +53,9 @@ export default async function Dashboard({
   const latestCheckin = patient.checkins[0];
   const riskLabel = latestCheckin
     ? latestCheckin.level === 'critical'
-      ? 'Critica'
+      ? 'Crítica (legado não validado)'
       : latestCheckin.level === 'high'
-        ? 'Alta'
+        ? 'Alta (legado não validado)'
         : latestCheckin.level === 'moderate'
           ? 'Moderada (legado não validado)'
           : latestCheckin.level === 'low'
