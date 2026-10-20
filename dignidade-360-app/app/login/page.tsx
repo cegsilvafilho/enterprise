@@ -6,7 +6,7 @@ import { signIn } from 'next-auth/react';
 
 const demoLoginToken = '__dignidade360_demo_login__';
 const demoLoginEnabled =
-  process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_DEMO_LOGIN_ENABLED === 'true';
+  process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DEMO_LOGIN_ENABLED === 'true';
 
 const demoUsers = [
   { email: 'paciente@teste.com', label: 'Paciente', icon: Activity },
@@ -64,7 +64,7 @@ export default function Login() {
         </div>
 
         <h1>Entre na plataforma.</h1>
-        <p>Use seu email e senha ou escolha um perfil de demonstracao para acessar rapidamente.</p>
+        <p>Entre com sua conta autorizada. Este aplicativo nao e um canal de emergencia.</p>
 
         <form className="form login-form" onSubmit={handleSubmit}>
           <label>
@@ -84,14 +84,14 @@ export default function Login() {
         <div className="notice">
           <ShieldCheck />
           <span>
-            O acesso sem senha e apenas para demonstracao com dados ficticios. Desative antes de usar pacientes reais.
+            Acesso sem senha bloqueado em ambientes hospedados. Demonstracoes devem usar ambiente isolado e dados sinteticos.
           </span>
         </div>
       </main>
 
       <aside className="login-panel">
         <h2 className="eyebrow">Acessos de teste</h2>
-        <p>Para explorar o sistema agora, clique em um perfil. Nao precisa digitar email nem senha.</p>
+        <p>Os perfis sem senha estao disponiveis somente em desenvolvimento local explicitamente habilitado.</p>
         {demoLoginEnabled ? (
           <div className="role-grid compact-grid">
             {demoUsers.map((user) => (
