@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { validContact,validIdempotencyKey } from '@/lib/navigation-policy';
 import { prisma } from '@/lib/prisma';
 import { canAccessPatient } from '@/lib/access';
 import { navigationActor, navigationBadInput, navigationPersistenceEnabled, navigationSameOrigin } from '@/lib/navigation';
@@ -19,12 +20,9 @@ export async function POST(request: Request) {
   const reportedChange = typeof data.reportedChange==='string' ? data.reportedChange : '';
   const summary = typeof data.summary==='string' ? data.summary.trim() : '';
   const key = typeof data.idempotencyKey==='string' ? data.idempotencyKey : '';
-  if (!/^[0-9a-f-]{36}$/i.test(key)) return navigationBadInput('Chave de registro inválida.');
+  if (!validIdempotencyKey(key)) return navigationBadInput('Chave de registro inválida.');
   if (!['phone','video','in_person'].includes(channel)) return navigationBadInput('Canal inválido.');
-  if (!['reached','no_answer'].includes(result)) return navigationBadInput('Resultado inválido.');
-  if (!['not_assessed','unchanged','changed'].includes(reportedChange)) return navigationBadInput('Mudança relatada inválida.');
-  if (result==='no_answer' && reportedChange!=='not_assessed') return navigationBadInput('Sem resposta significa condição não avaliada.');
-  if (summary.length>1200 || (result==='reached' && summary.length<12)) return navigationBadInput('Descreva a escuta entre 12 e 1200 caracteres.');
+  if (!validContact(result,reportedChange,summary)) return navigationBadInput('Resultado e escuta inconsistentes; sem resposta implica condição não avaliada.');
   if (!patientId || !(await canAccessPatient(actor,patientId))) return Response.json({error:'Paciente inacessível.'},{status:404});
 
   try {

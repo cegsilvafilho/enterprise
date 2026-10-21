@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { canTransitionNavigationTask,validTaskOutcome } from '@/lib/navigation-policy';
 import { canAccessPatient } from '@/lib/access';
 import { navigationActor,navigationBadInput,navigationPersistenceEnabled,navigationSameOrigin } from '@/lib/navigation';
 const states=new Set(['open','in_progress','waiting','resolved']);
@@ -17,13 +18,13 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
   const version=typeof d.version==='number' && Number.isSafeInteger(d.version)?d.version:-1;
   const outcome=typeof d.outcome==='string'?d.outcome.trim():'';
   if(!states.has(status)||version<1)return navigationBadInput('Estado ou versão inválidos.');
-  if(status==='resolved' && (outcome.length<12||outcome.length>2000))return navigationBadInput('É obrigatório registrar um resultado verificável (12–2000 caracteres).');
+  if(status==='resolved' && !validTaskOutcome(outcome))return navigationBadInput('É obrigatório registrar um resultado verificável (12–2000 caracteres).');
   if(status!=='resolved' && outcome) return navigationBadInput('O desfecho é reservado ao encerramento.');
   const item=await prisma.navigationTask.findFirst({where:{id,organizationId:actor.organizationId}});
   if(!item||!(await canAccessPatient(actor,item.patientId)))return Response.json({error:'Ação não encontrada.'},{status:404});
   if(item.ownerUserId!==actor.id)return Response.json({error:'Somente o responsável atribuído pode atualizar esta ação.'},{status:403});
   if(item.status==='resolved')return Response.json({error:'Ação já encerrada.'},{status:409});
-  if(item.status===status)return navigationBadInput('Selecione uma mudança de situação.');
+  if(!canTransitionNavigationTask(item.status,status))return navigationBadInput('Transição de estado não permitida.');
 
   const changed=await prisma.$transaction(async tx=>{
     const updated=await tx.navigationTask.updateMany({where:{

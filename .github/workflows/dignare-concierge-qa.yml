@@ -43,6 +43,8 @@ jobs:
         run: npx prisma validate
       - name: Build without mutating database or seeding
         run: npm run build
+      - name: Test navigation safety policies
+        run: node --test tests/navigation-policy.test.cjs
   security:
     name: Runtime dependency audit
     runs-on: ubuntu-22.04
