@@ -2,7 +2,7 @@ name: Dignare Concierge - qualidade da branch
 
 on:
   push:
-    branches: ['feat/dignare-concierge-mvp-20261020']
+    branches: ['feat/dignare-concierge-mvp-20261020', 'feat/dignare-navigation-persistence-v05']
     paths:
       - 'dignidade-360-app/**'
       - '.github/workflows/dignare-concierge-qa.yml'
@@ -37,6 +37,10 @@ jobs:
           cache-dependency-path: dignidade-360-app/package-lock.json
       - name: Install exact locked dependencies
         run: npm ci
+      - name: Validate Prisma schema without connecting to a database
+        env:
+          DATABASE_URL: postgresql://validation:validation@localhost:5432/never_connect
+        run: npx prisma validate
       - name: Build without mutating database or seeding
         run: npm run build
   security:

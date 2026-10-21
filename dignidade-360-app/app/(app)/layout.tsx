@@ -42,6 +42,7 @@ const roleConfig = {
       { path: '/dashboard', label: 'Paciente 360', icon: UserRound },
       { path: '/patients', label: 'Pacientes', icon: UsersRound },
       { path: '/concierge', label: 'Concierge (demo)', icon: ClipboardList },
+      { path: '/navigation', label: 'Navegação (staging)', icon: ClipboardList },
       { path: '/queue', label: 'Fila', icon: ListChecks },
     ],
   },
