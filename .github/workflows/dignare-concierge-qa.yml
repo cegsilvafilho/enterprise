@@ -2,7 +2,7 @@ name: Dignare Concierge - qualidade da branch
 
 on:
   push:
-    branches: ['feat/dignare-concierge-mvp-20261020']
+    branches: ['feat/dignare-concierge-mvp-20261020', 'feat/dignare-navigation-persistence-v05']
     paths:
       - 'dignidade-360-app/**'
       - '.github/workflows/dignare-concierge-qa.yml'
@@ -37,8 +37,14 @@ jobs:
           cache-dependency-path: dignidade-360-app/package-lock.json
       - name: Install exact locked dependencies
         run: npm ci
+      - name: Validate Prisma schema without connecting to a database
+        env:
+          DATABASE_URL: postgresql://validation:validation@localhost:5432/never_connect
+        run: npx prisma validate
       - name: Build without mutating database or seeding
         run: npm run build
+      - name: Test navigation safety policies
+        run: node --test tests/navigation-policy.test.cjs
   security:
     name: Runtime dependency audit
     runs-on: ubuntu-22.04
@@ -60,3 +66,41 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Block unreviewed critical vulnerabilities in runtime dependencies
         run: npm audit --omit=dev --audit-level=critical
+
+  navigation-integration:
+    name: Navigation persistence integration (synthetic PostgreSQL)
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_only_ephemeral
+          POSTGRES_DB: dignare_synthetic_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d dignare_synthetic_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    defaults:
+      run:
+        working-directory: dignidade-360-app
+    env:
+      DATABASE_URL: postgresql://test:test_only_ephemeral@127.0.0.1:5432/dignare_synthetic_ci?schema=public
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Node 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dignidade-360-app/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Initialize disposable CI database only
+        run: npx prisma db push --skip-generate
+      - name: Test tenant-scoped longitudinal schema and concurrent close
+        run: node --test tests/navigation-persistence.integration.cjs
