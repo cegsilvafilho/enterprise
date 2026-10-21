@@ -247,6 +247,7 @@ model NavigationTask {
   creatorUserId  String
   closedByUserId String?
   originContactId String?
+  idempotencyKey String   @unique
   title          String
   status         String   @default("open")
   dueAt          DateTime

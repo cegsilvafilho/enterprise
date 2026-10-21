@@ -35,3 +35,8 @@ Por segurança, `navigationPersistenceEnabled()` exige simultaneamente: Vercel P
 - Responsividade, teclado, leitores de tela, sessão expirada, auditoria e métricas de operação com dados fictícios.
 
 **Nunca ativar esse módulo para pacientes reais nem migrar o banco de produção antes dos gates clínicos, LGPD, segurança e contratos.**
+
+### Incremento de idempotência em ações
+- Criação de tarefa recebe UUID v4 único no navegador e no modelo Prisma; repetição do mesmo envio retorna o mesmo ID sem duplicar a ação nem o log.
+- Reutilização da chave com outro conteúdo retorna 409; em falha de rede o navegador mantém a chave de envio até confirmação.
+- Exige migração aprovada **somente no staging** para a nova coluna e índice único. Não foram aplicadas migrações automaticamente.

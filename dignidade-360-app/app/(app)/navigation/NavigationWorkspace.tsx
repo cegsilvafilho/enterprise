@@ -38,6 +38,7 @@ export default function NavigationWorkspace({actorId,patients,patient,contacts,t
   const [taskStatus,setTaskStatus]=useState<Record<string,string>>({});
   const [taskOutcomes,setTaskOutcomes]=useState<Record<string,string>>({});
   const key=useRef<string|null>(null);
+  const taskKey=useRef<string|null>(null);
   function feedback(){setError('');setNotice('');}
   async function recordContact(event:React.FormEvent){
     event.preventDefault();feedback();setBusy(true);
@@ -56,8 +57,10 @@ export default function NavigationWorkspace({actorId,patients,patient,contacts,t
   }
   async function addTask(event:React.FormEvent){
     event.preventDefault();feedback();setBusy(true);
+    if(!taskKey.current)taskKey.current=crypto.randomUUID();
     try{
-      await send('/api/navigation/tasks','POST',{patientId:patient.id,title,ownerUserId:owner,dueDate,originContactId:origin||undefined});
+      await send('/api/navigation/tasks','POST',{patientId:patient.id,title,ownerUserId:owner,dueDate,originContactId:origin||undefined,idempotencyKey:taskKey.current});
+      taskKey.current=null;
       setTitle('');setDueDate('');setOrigin('');setNotice('Ação atribuída. A responsabilidade ficará registrada na trilha de auditoria.');
       router.refresh();
     }catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar ação.');}
