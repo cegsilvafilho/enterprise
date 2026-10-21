@@ -34,6 +34,14 @@ test('synthetic longitudinal contact/task records survive writes with traceabili
     assert.equal(contact.result,'no_answer');
     assert.equal(contact.reportedChange,'not_assessed');
     assert.equal((await prisma.navigationContact.findMany({where:{organizationId:orgB.id}})).length,0);
+    // Mismatched patient/organization and author/organization must fail in PostgreSQL
+    // even if a future application route accidentally omits its tenant filter.
+    await assert.rejects(()=>prisma.navigationContact.create({data:{
+      organizationId:orgB.id,patientId:personA.id,authorUserId:professionalB.id,
+      idempotencyKey:randomUUID(),channel:'phone',result:'no_answer',
+      reportedChange:'not_assessed',summary:'Teste de conflito de organização.'
+    }}),e=>e.code==='P2003');
+
     await assert.rejects(()=>prisma.navigationContact.create({data:{
       organizationId:orgA.id,patientId:personA.id,authorUserId:professionalA.id,
       idempotencyKey:contactKey,channel:'phone',result:'reached',reportedChange:'changed',summary:'Duplicata intencional no teste.'
@@ -47,6 +55,13 @@ test('synthetic longitudinal contact/task records survive writes with traceabili
     }});
     assert.equal(task.version,1);
     assert.equal((await prisma.navigationTask.findMany({where:{organizationId:orgB.id}})).length,0);
+    // Contact of one patient may not be linked to another patient's task.
+    await assert.rejects(()=>prisma.navigationTask.create({data:{
+      organizationId:orgB.id,patientId:personB.id,creatorUserId:professionalB.id,
+      ownerUserId:professionalB.id,originContactId:contact.id,idempotencyKey:randomUUID(),
+      title:'Ação com contato de outra organização',dueAt:new Date('2026-10-25T02:59:59Z')
+    }}),e=>e.code==='P2003');
+
     const first=await prisma.navigationTask.updateMany({where:{id:task.id,organizationId:orgA.id,version:1,status:{not:'resolved'}},data:{
       status:'resolved',version:{increment:1},outcome:'Retorno confirmado no cenário de teste.',closedByUserId:professionalA.id,closedAt:new Date()
     }});
