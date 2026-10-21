@@ -17,6 +17,8 @@ model Organization {
   careLines CareLine[]
   audits    Audit[]
   consents  Consent[]
+  navigationContacts NavigationContact[]
+  navigationTasks NavigationTask[]
 }
 
 model User {
@@ -40,6 +42,10 @@ model User {
   caregiverGrants    CaregiverGrant[]
   assignments        PatientAssignment[]
   audits             Audit[]
+  navigationContacts NavigationContact[] @relation("NavigationContactAuthor")
+  navigationTasksCreated NavigationTask[] @relation("NavigationTaskCreator")
+  navigationTasksOwned NavigationTask[] @relation("NavigationTaskOwner")
+  navigationTasksClosed NavigationTask[] @relation("NavigationTaskCloser")
 
   @@index([organizationId, role])
 }
@@ -81,6 +87,8 @@ model Patient {
   alerts           Alert[]
   conducts         Conduct[]
   timeline         TimelineEvent[]
+  navigationContacts NavigationContact[]
+  navigationTasks NavigationTask[]
 
   @@index([organizationId, active])
 }
@@ -206,4 +214,54 @@ model CareLine {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, name])
+}
+
+  
+// Operational navigation ledger: NOT the canonical electronic clinical record.
+// This schema is not migrated by npm build. Staging feature flag is OFF by default.
+model NavigationContact {
+  id             String   @id @default(uuid())
+  organizationId String
+  patientId      String
+  authorUserId   String
+  idempotencyKey String   @unique
+  channel        String
+  result         String
+  reportedChange String
+  summary        String
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  patient        Patient @relation(fields: [patientId], references: [id])
+  author         User @relation("NavigationContactAuthor", fields: [authorUserId], references: [id])
+  tasks          NavigationTask[]
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([organizationId, authorUserId, createdAt])
+}
+
+model NavigationTask {
+  id             String   @id @default(uuid())
+  organizationId String
+  patientId      String
+  ownerUserId    String
+  creatorUserId  String
+  closedByUserId String?
+  originContactId String?
+  title          String
+  status         String   @default("open")
+  dueAt          DateTime
+  outcome        String?
+  closedAt       DateTime?
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  patient        Patient @relation(fields: [patientId], references: [id])
+  owner          User @relation("NavigationTaskOwner", fields: [ownerUserId], references: [id])
+  creator        User @relation("NavigationTaskCreator", fields: [creatorUserId], references: [id])
+  closedBy       User? @relation("NavigationTaskCloser", fields: [closedByUserId], references: [id])
+  originContact  NavigationContact? @relation(fields: [originContactId], references: [id])
+
+  @@index([organizationId, patientId, status, dueAt])
+  @@index([organizationId, ownerUserId, status, dueAt])
 }
