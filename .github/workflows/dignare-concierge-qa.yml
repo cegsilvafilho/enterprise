@@ -66,3 +66,41 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Block unreviewed critical vulnerabilities in runtime dependencies
         run: npm audit --omit=dev --audit-level=critical
+
+  navigation-integration:
+    name: Navigation persistence integration (synthetic PostgreSQL)
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_only_ephemeral
+          POSTGRES_DB: dignare_synthetic_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d dignare_synthetic_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    defaults:
+      run:
+        working-directory: dignidade-360-app
+    env:
+      DATABASE_URL: postgresql://test:test_only_ephemeral@127.0.0.1:5432/dignare_synthetic_ci?schema=public
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Node 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dignidade-360-app/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Initialize disposable CI database only
+        run: npx prisma db push --skip-generate
+      - name: Test tenant-scoped longitudinal schema and concurrent close
+        run: node --test tests/navigation-persistence.integration.cjs
